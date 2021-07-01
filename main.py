@@ -2,13 +2,24 @@ import SiteData
 import formatter
 import csv
 import time
-import ezgmail
+from twilio.rest import Client
+
+myTwilioSID = '**********'
+myAuthToken = '************'
+myTwilioNumber = '+**********'
+myCellPhone = '+**********'
+twilioClient = Client(myTwilioSID, myAuthToken)
 
 
 def check_for_new_records():
 
     # Fetch site data
     incidents = SiteData.get_site_data()
+
+    # Check for error
+    if incidents == "error":
+        print("Error: Site data could not be loaded")
+        return 1
 
     previous_times = []
 
@@ -25,7 +36,7 @@ def check_for_new_records():
 
         csvWriter = csv.writer(writeFile)
 
-        street_query = "TULL"
+        street_query = "MLK"
 
         # Checks each incident for a matching street name
         for incident in incidents:
@@ -40,8 +51,9 @@ def check_for_new_records():
                         writeFile.writelines(str(formatted_incident) + '\n')
 
                         # Send text message
-                        message = f"/\n\n** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
-                        ezgmail.send(recipient='NUMBER@GATEWAY.net', subject='EmergenceMe', body=message)
+                        message = f"-\n\n** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
+                        twilioClient.messages.create(body=message, from_=myTwilioNumber, to=myCellPhone)
+                        # print("Message sent")
 
                         # Print information to console
                         print(f"** {formatted_incident[2]} **")

@@ -12,8 +12,9 @@ def get_site_data():
 
     # Go to the dispatch log site
     browser.get("https://maps.fayetteville-ar.gov/DispatchLogs/")
-    time.sleep(5)
+
     # Wait for site to load then store all "tr" elements in a "dispatches" list
+    time.sleep(5)
     dispatches = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
 
     # Remove the first element in the list
@@ -35,27 +36,31 @@ def get_site_data():
         location = ""
 
         # Breaks up the data
-        for i in range(3):
-            # Set Date and time
-            if i == 0:
-                if incident_info[i].text == "":
-                    incident_time = "N/A"
-                else:
-                    incident_time = incident_info[i].text
+        if len(incident_info) == 3:
+            for i in range(3):
+                # Set Date and time
+                if i == 0:
+                    if incident_info[i].text == "":
+                        incident_time = "N/A"
+                    else:
+                        incident_time = incident_info[i].text
 
-            # Set information
-            if i == 1:
-                if incident_info[i].text == "":
-                    description = "N/A"
-                else:
-                    description = incident_info[i].text
+                # Set information
+                if i == 1:
+                    if incident_info[i].text == "":
+                        description = "N/A"
+                    else:
+                        description = incident_info[i].text
 
-            # Set Location
-            if i == 2:
-                if incident_info[i].text == "":
-                    location = "N/A"
-                else:
-                    location = incident_info[i].text.upper()
+                # Set Location
+                if i == 2:
+                    if incident_info[i].text == "":
+                        location = "N/A"
+                    else:
+                        location = incident_info[i].text.upper()
+        else:
+            browser.close()
+            return "error"
 
         # Appends the set info to the list
         formattedIncidents.append((incident_time, description, location))
