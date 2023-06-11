@@ -4,10 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
-
 def get_site_data():
     # Launch and configure Browser
-    browser = webdriver.Firefox()
+    browser = webdriver.Chrome()
     type(browser)
 
     # Go to the dispatch log site
@@ -68,4 +67,3 @@ def get_site_data():
     browser.close()
 
     return formattedIncidents
-

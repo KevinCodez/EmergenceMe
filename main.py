@@ -1,20 +1,21 @@
 import SiteData
-import formatter
+import DataFormatter
+import UserSecrets
 import csv
 import time
 from twilio.rest import Client
 
-myTwilioSID = '**********'
-myAuthToken = '************'
-myTwilioNumber = '+**********'
-myCellPhone = '+**********'
-twilioClient = Client(myTwilioSID, myAuthToken)
+twilioClient = Client(UserSecrets.myTwilioSID, UserSecrets.myAuthToken)
 
 
 def check_for_new_records():
 
     # Fetch site data
-    incidents = SiteData.get_site_data()
+    try:
+        incidents = SiteData.get_site_data()
+    except:
+        print("Error: Site data could not be loaded")
+        return 1
 
     # Check for error
     if incidents == "error":
@@ -22,12 +23,14 @@ def check_for_new_records():
         return 1
 
     previous_times = []
+    previous_dates = []
 
     # Reads CSV file and
     with open('records.csv') as readFile:
         csvReader = csv.reader(readFile, skipinitialspace=True)
         for row in csvReader:
             previous_times.append(row[1])
+            previous_dates.append(row[0])
 
     # Removes the quotes from the previous_times values
     previous_times = [i.replace("'", "") for i in previous_times]
@@ -36,36 +39,49 @@ def check_for_new_records():
 
         csvWriter = csv.writer(writeFile)
 
-        street_query = "MLK"
+        monitored_streets = UserSecrets.monitored_streets
 
         # Checks each incident for a matching street name
         for incident in incidents:
-            # Check if incident street name matches the street_query
-            if street_query in incident[2]:
-                # Check if information is already in CSV file
-                for i in range(len(previous_times) + 1):
+            if checkMatch(monitored_streets, incident[2]): # Check if incident street name matches the monitored_streets
+                
+                for i in range(len(previous_times) + 1): # Check if information is already in CSV file
                     if i == len(previous_times):
+                        # The incident is new. Save info and send text
+                        
                         # Incident is new
-                        formatted_incident = formatter.format_incident(incident)
+                        formatted_incident = DataFormatter.format_incident(incident)
                         # Add incident to CSV File
                         writeFile.writelines(str(formatted_incident) + '\n')
 
-                        # Send text message
-                        message = f"-\n\n** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
-                        twilioClient.messages.create(body=message, from_=myTwilioNumber, to=myCellPhone)
-                        # print("Message sent")
-
                         # Print information to console
-                        print(f"** {formatted_incident[2]} **")
+                        print(f"\n** {formatted_incident[2]} **")
                         print(formatted_incident[0])
                         print(formatted_incident[1])
                         print(formatted_incident[3] + '\n')
 
-                        # Avoid spam / getting flagged
-                        time.sleep(20)
+                        # Send text message
+                        message = f"** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
+                    
+                        for cellNumber in UserSecrets.numbersToText:
+                            twilioClient.messages.create(body=message, from_=UserSecrets.myTwilioNumber, to=cellNumber)
+                            print(f"Text sent to {cellNumber}")
+                            time.sleep(3)
+                            
+                        print("\n")
+
                         break
-                    elif formatter.format_incident(incident)[1] == previous_times[i]:
-                        break
+                    elif DataFormatter.format_incident(incident)[1] == previous_times[i]:
+                        prev_date = previous_dates[i][2:-1]
+                        if DataFormatter.format_incident(incident)[0] == prev_date:
+                            # Date and time and street name match, this incident has been alerted already
+                            break
+
+def checkMatch(streetQuery, incidentLocation):
+    for street in streetQuery:
+        if street in incidentLocation:
+            return True
+    return False
 
 
 while True:

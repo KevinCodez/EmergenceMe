@@ -1,6 +1,5 @@
 import datetime
 
-
 # Formats and returns the data into an easy to understand list
 def format_incident(incident):
 
