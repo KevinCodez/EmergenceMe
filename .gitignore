@@ -13,4 +13,6 @@ __pycache__/
 
 ##   Secret Files   ##
 UserSecrets.py
-records.csv
+Logs.csv
+Detentions.csv
+LastDetentionName.txt

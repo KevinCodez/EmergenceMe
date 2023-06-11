@@ -1,4 +1,4 @@
-import SiteData
+import LogsSiteData
 import DataFormatter
 import UserSecrets
 import csv
@@ -8,25 +8,25 @@ from twilio.rest import Client
 twilioClient = Client(UserSecrets.myTwilioSID, UserSecrets.myAuthToken)
 
 
-def check_for_new_records():
+def check_for_new_logs():
 
     # Fetch site data
     try:
-        incidents = SiteData.get_site_data()
+        incidents = LogsSiteData.get_site_data()
     except:
-        print("Error: Site data could not be loaded")
+        print("Error: Logs could not be loaded")
         return 1
 
     # Check for error
     if incidents == "error":
-        print("Error: Site data could not be loaded")
+        print("Error: Logs could not be loaded")
         return 1
 
     previous_times = []
     previous_dates = []
 
     # Reads CSV file and
-    with open('records.csv') as readFile:
+    with open('Logs.csv') as readFile:
         csvReader = csv.reader(readFile, skipinitialspace=True)
         for row in csvReader:
             previous_times.append(row[1])
@@ -35,7 +35,7 @@ def check_for_new_records():
     # Removes the quotes from the previous_times values
     previous_times = [i.replace("'", "") for i in previous_times]
 
-    with open('records.csv', 'a', newline='') as writeFile:
+    with open('Logs.csv', 'a', newline='') as writeFile:
 
         csvWriter = csv.writer(writeFile)
 
@@ -64,12 +64,9 @@ def check_for_new_records():
                         message = f"** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
                     
                         for cellNumber in UserSecrets.numbersToText:
-                            twilioClient.messages.create(body=message, from_=UserSecrets.myTwilioNumber, to=cellNumber)
-                            print(f"Text sent to {cellNumber}")
-                            time.sleep(3)
+                            sendTextMessage(message, cellNumber)
                             
                         print("\n")
-
                         break
                     elif DataFormatter.format_incident(incident)[1] == previous_times[i]:
                         prev_date = previous_dates[i][2:-1]
@@ -77,14 +74,22 @@ def check_for_new_records():
                             # Date and time and street name match, this incident has been alerted already
                             break
 
-def checkMatch(streetQuery, incidentLocation):
-    for street in streetQuery:
+def check_for_new_detentions():
+    return 1
+
+def checkMatch(usersStreets, incidentLocation):
+    for street in usersStreets:
         if street in incidentLocation:
             return True
     return False
 
+def sendTextMessage(message, cellNumber):
+    twilioClient.messages.create(body=message, from_=UserSecrets.myTwilioNumber, to=cellNumber)
+    print(f"Text sent to {cellNumber}")
+    time.sleep(3)
 
 while True:
-    check_for_new_records()
+    check_for_new_logs()
+    check_for_new_detentions()
     print("Starting 30 minute timer")
     time.sleep(1600)
