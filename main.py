@@ -18,8 +18,7 @@ def check_for_new_logs():
         return 1
 
     # Check for error
-    if incidents == "error":
-        print("Error: Logs could not be loaded")
+    if incidents == "error_handled":
         return 1
 
     previous_times = []
@@ -90,6 +89,6 @@ def sendTextMessage(message, cellNumber):
 
 while True:
     check_for_new_logs()
-    check_for_new_detentions()
+    # check_for_new_detentions()
     print("Starting 30 minute timer")
     time.sleep(1600)
