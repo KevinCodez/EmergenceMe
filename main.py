@@ -9,7 +9,7 @@ from twilio.rest import Client
 twilioClient = Client(UserSecrets.myTwilioSID, UserSecrets.myAuthToken)
 
 
-def check_for_new_logs():
+def check_for_new_dispatches():
 
     # Fetch site data
     try:
@@ -76,7 +76,11 @@ def check_for_new_logs():
 
 def check_for_new_arrests():
     arrests = fetch_arrests()
-    return 0
+
+    if arrests == "error":
+        return 1
+    
+    
 
 def checkMatch(usersStreets, incidentLocation):
     for street in usersStreets:
@@ -90,7 +94,7 @@ def sendTextMessage(message, cellNumber):
     time.sleep(3)
 
 while True:
-    # check_for_new_logs()
+    # check_for_new_dispatches()
     check_for_new_arrests()
     print("Starting 30 minute timer")
     time.sleep(1600)
