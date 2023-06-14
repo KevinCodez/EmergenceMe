@@ -6,13 +6,11 @@ import DataFormatter
 
 def fetch_arrests():
 
-    # Stores tuples of formatted information
-    formattedArrests = []
+    # Wheather or not program just started up
+    isFirstRun = True
 
-    # Read in last known arrest
-    lastKnownArrest = ""
-    with open('data/LastKnownArrest.txt') as file:
-        lastKnownArrest = file.readline()
+    # List of formatted arrests
+    formatted_arrests = []
 
     # Launch Browser
     browser = webdriver.Firefox()
@@ -34,16 +32,11 @@ def fetch_arrests():
     # Remove the first element (table header) in the list
     arrests.pop(0)
 
-    # Write name of latest arrested person
-    latest_arrest_name = arrests[0].find_elements(By.TAG_NAME, 'td')[0].text
-    # with open("data/LastKnownArrest.txt", "w") as file:
-    #     file.write(latest_arrest_name)
-
     # Iterate and reformat the data to a list
     # Each dispatch is formatted and stored in the "formattedIncidents" tuple
     # ("Date | Time", "DESCRIPTION", "ADDRESS")
     # try:
-    for arrest in arrests:
+    for i, arrest in enumerate(arrests):
         # individual arrest information
         arrest_info = arrest.find_elements(By.TAG_NAME, 'td')
 
@@ -65,7 +58,7 @@ def fetch_arrests():
             else:
                 name = arrest_info[0].text
 
-                if name == lastKnownArrest:
+                if not isFirstRun and i >= 9:
                     break
                 
                 # Extract URL
@@ -113,17 +106,9 @@ def fetch_arrests():
         arrest_data.append(booking_time)
         arrest_data.append(charges)
         arrest_data.append(url)
+
         second_browser.close()
-        formatted_arrest = DataFormatter.format_arrest(arrest_data)
-        for data in arrest_data:
-            print(data)
-        print("\n")
-        # Appends the set info to the list
-        # formattedArrests.append((incident_time, description, location))
+        formatted_arrests.append(DataFormatter.format_arrest(arrest_data))
 
     browser.close()
-    return "test"
-    # except:
-    #     browser.close()
-    #     print("Some unknown problem occured in LogsSiteData.py")
-    #     return "error_handled"
+    return formatted_arrests
