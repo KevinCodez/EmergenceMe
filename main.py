@@ -1,6 +1,7 @@
-import LogsSiteData
+from DispatchScraper import fetch_incidents
+from ArrestScraper import fetch_arrests
 import DataFormatter
-import UserSecrets
+import data.UserSecrets as UserSecrets
 import csv
 import time
 from twilio.rest import Client
@@ -12,7 +13,7 @@ def check_for_new_logs():
 
     # Fetch site data
     try:
-        incidents = LogsSiteData.get_site_data()
+        incidents = fetch_incidents()
     except:
         print("Error: Logs could not be loaded")
         return 1
@@ -73,8 +74,9 @@ def check_for_new_logs():
                             # Date and time and street name match, this incident has been alerted already
                             break
 
-def check_for_new_detentions():
-    return 1
+def check_for_new_arrests():
+    arrests = fetch_arrests()
+    return 0
 
 def checkMatch(usersStreets, incidentLocation):
     for street in usersStreets:
@@ -88,7 +90,7 @@ def sendTextMessage(message, cellNumber):
     time.sleep(3)
 
 while True:
-    check_for_new_logs()
-    # check_for_new_detentions()
+    # check_for_new_logs()
+    check_for_new_arrests()
     print("Starting 30 minute timer")
     time.sleep(1600)
