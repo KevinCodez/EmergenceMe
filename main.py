@@ -26,7 +26,7 @@ def check_for_new_dispatches():
     previous_dates = []
 
     # Reads CSV file and
-    with open('Logs.csv') as readFile:
+    with open('data/Logs.csv') as readFile:
         csvReader = csv.reader(readFile, skipinitialspace=True)
         for row in csvReader:
             previous_times.append(row[1])
@@ -35,7 +35,7 @@ def check_for_new_dispatches():
     # Removes the quotes from the previous_times values
     previous_times = [i.replace("'", "") for i in previous_times]
 
-    with open('Logs.csv', 'a', newline='') as writeFile:
+    with open('data/Logs.csv', 'a', newline='') as writeFile:
 
         csvWriter = csv.writer(writeFile)
 
@@ -75,12 +75,64 @@ def check_for_new_dispatches():
                             break
 
 def check_for_new_arrests():
+    # arrest = [name, address, city, booking_date, booking_time, charges, url]
+
     arrests = fetch_arrests()
 
     if arrests == "error":
         return 1
-    
-    
+
+    previous_times = []
+    previous_dates = []
+
+    # Reads CSV file and
+    with open('data/Arrests.csv') as readFile:
+        csvReader = csv.reader(readFile, skipinitialspace=True)
+        for row in csvReader:
+            if len(row) > 4:  # Check if the row has at least 5 elements
+                previous_dates.append(row[4])
+            else:
+                previous_dates.append('')  # If the row is empty or has fewer elements, add an empty string for date
+
+            if len(row) > 5:  # Check if the row has at least 6 elements
+                previous_times.append(row[5])
+            else:
+                previous_times.append('')  # If the row is empty or has fewer elements, add an empty string for time
+
+    previous_dates = [i.replace("'", "") for i in previous_dates]
+    previous_times = [i.replace("'", "") for i in previous_times]
+
+    with open('data/Arrests.csv', 'a', newline='') as writeFile:
+
+        csvWriter = csv.writer(writeFile)
+        monitored_streets = UserSecrets.monitored_streets
+
+        # Checks each incident for a matching street name
+        for arrest in arrests:
+            if checkMatch(monitored_streets, arrest[1]): # Check if arrest address matches any monitored_streets
+                for i in range(len(previous_times) + 1): # Check if information is already in CSV file
+                    if i == len(previous_times):
+                        # The incident is new. Save info and send text
+                        print("Writing to CSV file")
+                        writeFile.writelines(str(arrest) + '\n')
+                        
+                        # Create message
+                        print('\n')
+                        s1 = f"** Neighbor Arrest **\n\n{arrest[0]}\n{arrest[1]}\n{arrest[2]}\n\n"
+                        s2 = '\n'.join(arrest[5])
+                        s3 = f"{arrest[6]}"
+                        message = s1 + s2 + s3
+                        print(message + '\n')
+
+                        # Send text messages
+                        for cellNumber in UserSecrets.numbersToText:
+                            sendTextMessage(message, cellNumber)
+
+                    elif arrest[4] == previous_times[i]:
+                        if arrest[3] == previous_dates[i]:
+                            # Date and time and street name match, this incident has been alerted already
+                            break
+
 
 def checkMatch(usersStreets, incidentLocation):
     for street in usersStreets:

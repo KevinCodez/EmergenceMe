@@ -13,7 +13,7 @@ def fetch_arrests():
     formatted_arrests = []
 
     # Launch Browser
-    browser = webdriver.Firefox()
+    browser = webdriver.Chrome()
 
     try:
         # Timeout in 5 seconds if the page is not loaded
@@ -58,7 +58,7 @@ def fetch_arrests():
                 else:
                     name = arrest_info[0].text
 
-                    if not isFirstRun and i >= 9:
+                    if not isFirstRun and i >= 5:
                         break
                     
                     # Extract URL
