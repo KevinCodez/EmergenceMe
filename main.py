@@ -15,7 +15,7 @@ def check_for_new_dispatches():
     try:
         incidents = fetch_incidents()
     except:
-        print("Error: Logs could not be loaded")
+        print("Error: Logs could not be loaded", flush=True)
         return 1
 
     # Check for error
@@ -55,10 +55,10 @@ def check_for_new_dispatches():
                         writeFile.writelines(str(formatted_incident) + '\n')
 
                         # Print information to console
-                        print(f"\n** {formatted_incident[2]} **")
-                        print(formatted_incident[0])
-                        print(formatted_incident[1])
-                        print(formatted_incident[3] + '\n')
+                        print(f"\n** {formatted_incident[2]} **", flush=True)
+                        print(formatted_incident[0], flush=True)
+                        print(formatted_incident[1], flush=True)
+                        print(formatted_incident[3] + '\n', flush=True)
 
                         # Send text message
                         message = f"** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
@@ -66,7 +66,7 @@ def check_for_new_dispatches():
                         for cellNumber in UserSecrets.numbersToText:
                             sendTextMessage(message, cellNumber)
                             
-                        print("\n")
+                        print("\n", flush=True)
                         break
                     elif DataFormatter.format_incident(incident)[1] == previous_times[i]:
                         prev_date = previous_dates[i][2:-1]
@@ -113,16 +113,15 @@ def check_for_new_arrests():
                 for i in range(len(previous_times) + 1): # Check if information is already in CSV file
                     if i == len(previous_times):
                         # The incident is new. Save info and send text
-                        print("Writing to CSV file")
                         writeFile.writelines(str(arrest) + '\n')
                         
                         # Create message
-                        print('\n')
+                        print('\n', flush=True)
                         s1 = f"** Neighbor Arrest **\n\n{arrest[0]}\n{arrest[1]}\n{arrest[2]}\n\n"
                         s2 = '\n'.join(arrest[5])
                         s3 = f"{arrest[6]}"
                         message = s1 + s2 + s3
-                        print(message + '\n')
+                        print(message + '\n', flush=True)
 
                         # Send text messages
                         for cellNumber in UserSecrets.numbersToText:
@@ -142,15 +141,15 @@ def checkMatch(usersStreets, incidentLocation):
 
 def sendTextMessage(message, cellNumber):
     twilioClient.messages.create(body=message, from_=UserSecrets.myTwilioNumber, to=cellNumber)
-    print(f"Text sent to {cellNumber}")
+    print(f"Text sent to {cellNumber}", flush=True)
     time.sleep(3)
 
 while True:
-    check_for_new_dispatches()
+    # check_for_new_dispatches()
     check_for_new_arrests()
-    print("Starting 30 minute timer")
+    print("Starting 30 minute timer", flush=True)
     time.sleep(1800)
 
-    check_for_new_dispatches()
-    print("Starting 30 minute timer")
+    # check_for_new_dispatches()
+    print("Starting 30 minute timer", flush=True)
     time.sleep(1800)

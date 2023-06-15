@@ -2,10 +2,13 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 
 def fetch_incidents():
     # Launch and configure Browser
-    browser = webdriver.Chrome()
+    options = Options()
+    options.headless = True
+    browser = webdriver.Firefox(options=options)
 
     try:
         # Set the page load timeout

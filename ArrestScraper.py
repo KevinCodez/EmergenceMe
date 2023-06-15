@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 import DataFormatter
 
 # Wheather or not program just started up
@@ -15,7 +16,9 @@ def fetch_arrests():
     formatted_arrests = []
 
     # Launch Browser
-    browser = webdriver.Chrome()
+    options = Options()
+    options.headless = True
+    browser = webdriver.Firefox(options=options)
 
     try:
         # Timeout in 5 seconds if the page is not loaded
@@ -28,7 +31,7 @@ def fetch_arrests():
         arrests = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
     except:
         browser.close()
-        print("Failed to load intake site in a timely manner")
+        print("Failed to load intake site in a timely manner", flush=True)
         return "error"
     try:
         # Remove the first element (table header) in the list
@@ -68,7 +71,7 @@ def fetch_arrests():
                     url = nested_element[0].get_attribute("href")
             try:
                 # Launch a secondary browser
-                second_browser = webdriver.Firefox()
+                second_browser = webdriver.Firefox(options=options)
 
                 # try:
                     # Timeout in 5 seconds if the page is not loaded
@@ -81,7 +84,7 @@ def fetch_arrests():
                 detainee_info = WebDriverWait(second_browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
             except:
                 second_browser.close()
-                print("An error occured when attempting to open the second browser")
+                print("An error occured when attempting to open the second browser", flush=True)
                 return "error"
             address = detainee_info[0].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lbladdress').text
             city = detainee_info[0].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lblcityzip').text
@@ -113,7 +116,7 @@ def fetch_arrests():
             formatted_arrests.append(DataFormatter.format_arrest(arrest_data))
     except:
         browser.close()
-        print("Some issue occured in ArrestScrapper.py")
+        print("Some issue occured in ArrestScrapper.py", flush=True)
         return "error"
 
     browser.close()
