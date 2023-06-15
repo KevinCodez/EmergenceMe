@@ -146,7 +146,11 @@ def sendTextMessage(message, cellNumber):
     time.sleep(3)
 
 while True:
-    # check_for_new_dispatches()
+    check_for_new_dispatches()
     check_for_new_arrests()
     print("Starting 30 minute timer")
-    time.sleep(1600)
+    time.sleep(1800)
+
+    check_for_new_dispatches()
+    print("Starting 30 minute timer")
+    time.sleep(1800)

@@ -4,10 +4,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import DataFormatter
 
+# Wheather or not program just started up
+isNotFirstRun = False
+
 def fetch_arrests():
 
-    # Wheather or not program just started up
-    isFirstRun = True
+    global isNotFirstRun
 
     # List of formatted arrests
     formatted_arrests = []
@@ -58,7 +60,7 @@ def fetch_arrests():
                 else:
                     name = arrest_info[0].text
 
-                    if not isFirstRun and i >= 5:
+                    if isNotFirstRun and i >= 5:
                         break
                     
                     # Extract URL
@@ -110,9 +112,10 @@ def fetch_arrests():
             second_browser.close()
             formatted_arrests.append(DataFormatter.format_arrest(arrest_data))
     except:
-        second_browser.close()
-        print("Some issue occured after loading the second browser in ArrestScrapper.py")
+        browser.close()
+        print("Some issue occured in ArrestScrapper.py")
         return "error"
 
     browser.close()
+    isNotFirstRun = True
     return formatted_arrests
