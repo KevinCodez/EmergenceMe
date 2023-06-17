@@ -1,12 +1,12 @@
 from DispatchScraper import fetch_incidents
 from ArrestScraper import fetch_arrests
 import DataFormatter
-import data.UserSecrets as UserSecrets
+import data.Config as Config
 import csv
 import time
 from twilio.rest import Client
 
-twilioClient = Client(UserSecrets.myTwilioSID, UserSecrets.myAuthToken)
+twilioClient = Client(Config.myTwilioSID, Config.myAuthToken)
 
 
 def check_for_new_dispatches():
@@ -39,7 +39,7 @@ def check_for_new_dispatches():
 
         csvWriter = csv.writer(writeFile)
 
-        monitored_streets = UserSecrets.monitored_streets
+        monitored_streets = Config.monitored_streets
 
         # Checks each incident for a matching street name
         for incident in incidents:
@@ -63,7 +63,7 @@ def check_for_new_dispatches():
                         # Send text message
                         message = f"** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
                     
-                        for cellNumber in UserSecrets.numbersToText:
+                        for cellNumber in Config.numbersToText:
                             sendTextMessage(message, cellNumber)
                             
                         print("\n", flush=True)
@@ -105,7 +105,7 @@ def check_for_new_arrests():
     with open('data/Arrests.csv', 'a', newline='') as writeFile:
 
         csvWriter = csv.writer(writeFile)
-        monitored_streets = UserSecrets.monitored_streets
+        monitored_streets = Config.monitored_streets
 
         # Checks each incident for a matching street name
         for arrest in arrests:
@@ -124,7 +124,7 @@ def check_for_new_arrests():
                         print(message + '\n', flush=True)
 
                         # Send text messages
-                        for cellNumber in UserSecrets.numbersToText:
+                        for cellNumber in Config.numbersToText:
                             sendTextMessage(message, cellNumber)
 
                     elif arrest[4] == previous_times[i]:
@@ -140,7 +140,7 @@ def checkMatch(usersStreets, incidentLocation):
     return False
 
 def sendTextMessage(message, cellNumber):
-    twilioClient.messages.create(body=message, from_=UserSecrets.myTwilioNumber, to=cellNumber)
+    twilioClient.messages.create(body=message, from_=Config.myTwilioNumber, to=cellNumber)
     print(f"Text sent to {cellNumber}", flush=True)
     time.sleep(3)
 

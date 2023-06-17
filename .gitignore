@@ -10,6 +10,3 @@ Thumbs.db
 ##  Project Generated Files
 __pycache__/
 *.log
-
-##   Secret Files   ##
-data/
