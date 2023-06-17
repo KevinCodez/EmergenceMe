@@ -10,9 +10,3 @@ Thumbs.db
 ##  Project Generated Files
 __pycache__/
 *.log
-
-##   Secret Files   ##
-UserSecrets.py
-Logs.csv
-Detentions.csv
-LastDetentionName.txt
