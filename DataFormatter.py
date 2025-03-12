@@ -16,7 +16,7 @@ def format_incident(incident):
     return formatted_incident
 
 def format_arrest(incident):
-    # incident = [name, address, city, booking_date, booking_time, charges, url]
+    # incident = [name, address, city, booking_date, booking_time, charges[], url]
 
     # Format the name
     # Split the name into last name and first name

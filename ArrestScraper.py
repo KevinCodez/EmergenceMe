@@ -2,7 +2,6 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
 import DataFormatter
 
 # Wheather or not program just started up
@@ -15,9 +14,11 @@ def fetch_arrests():
     # List of formatted arrests
     formatted_arrests = []
 
-    # Launch Browser
-    options = Options()
-    options.headless = True
+    # Configure Firefox options for headless mode
+    options = webdriver.FirefoxOptions()
+    options.add_argument("--headless")
+
+    # Launch Firefox in headless mode
     browser = webdriver.Firefox(options=options)
 
     try:
@@ -25,18 +26,17 @@ def fetch_arrests():
         browser.set_page_load_timeout(10)
 
         # Go to the dispatch log site
-        browser.get("https://sheriff.washingtoncountyar.gov/res/DIntakeRoster.aspx")
+        browser.get("https://www.washcosoar.gov/res/DetaineeIntakeRoster.aspx")
 
         # Wait for site to load then store all "tr" elements in a "dispatches" list
-        arrests = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
+        arrests = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'tbody')))
+        arrests = arrests.find_elements(By.TAG_NAME, 'tr')[1:]
     except:
         browser.close()
-        print("Failed to load intake site in a timely manner", flush=True)
+        print("Failed to load intake site in a timely manner")
         return "error"
+    
     try:
-        # Remove the first element (table header) in the list
-        arrests.pop(0)
-
         # Iterate and reformat the data to a list
         # Each dispatch is formatted and stored in the "formattedIncidents" tuple
         # ("Date | Time", "DESCRIPTION", "ADDRESS")
@@ -55,7 +55,7 @@ def fetch_arrests():
             charges = []
 
             # Breaks up the data
-            if len(arrest_info) == 7:
+            if len(arrest_info) == 8:
 
                 # Extract name
                 if arrest_info[0].text == "":
@@ -73,35 +73,29 @@ def fetch_arrests():
                 # Launch a secondary browser
                 second_browser = webdriver.Firefox(options=options)
 
-                # try:
-                    # Timeout in 5 seconds if the page is not loaded
                 second_browser.set_page_load_timeout(10)
 
                 # Go to the dispatch log site
                 second_browser.get(url)
 
                 # Wait for site to load then store all "tr" elements in a "dispatches" list
-                detainee_info = WebDriverWait(second_browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
-            except:
+                detainee_info = WebDriverWait(second_browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div#SiteContentPlaceHolder_Results')))
+            except Exception as e:
                 second_browser.close()
-                print("An error occured when attempting to open the second browser", flush=True)
+                print("An error occured when attempting to open the second browser")
+                print(e)
                 return "error"
-            address = detainee_info[0].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lbladdress').text
-            city = detainee_info[0].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lblcityzip').text
-
-            pad = 0
-            if len(detainee_info[2].find_elements(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lblReleased')) > 0:
-                pad = 1
-
-            booking_date = detainee_info[9 + pad].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lblidate').text
-            booking_time = detainee_info[10 + pad].find_element(By.CSS_SELECTOR, 'span#ContentPlaceHolder1_lblitime').text
             
-            for i in range(17 + pad, len(detainee_info)):
-
-                #Extract Charges
-                nested_element = detainee_info[i].find_elements(By.TAG_NAME, 'td')
-                charge = nested_element[0].text
-                charges.append(charge)
+            address = detainee_info.find_element(By.CSS_SELECTOR, 'span#SiteContentPlaceHolder_lbladdress').text
+            city = detainee_info.find_element(By.CSS_SELECTOR, 'span#SiteContentPlaceHolder_lblcityzip').text
+            booking_datetime = detainee_info.find_element(By.CSS_SELECTOR, 'span#SiteContentPlaceHolder_lblidate').text
+            booking_date, booking_time = booking_datetime.split(' ')
+            
+            charge_table = detainee_info.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')[1:]
+            for charge_row in charge_table:
+                # Extract Charge description
+                charge_description = charge_row.find_element(By.TAG_NAME, 'td')
+                charges.append(charge_description.text)
 
             arrest_data = []
             arrest_data.append(name)
@@ -114,9 +108,10 @@ def fetch_arrests():
 
             second_browser.close()
             formatted_arrests.append(DataFormatter.format_arrest(arrest_data))
-    except:
+    except Exception as e:
         browser.close()
-        print("Some issue occured in ArrestScrapper.py", flush=True)
+        print("Some issue occured in ArrestScrapper.py")
+        print(e)
         return "error"
 
     browser.close()
