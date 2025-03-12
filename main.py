@@ -15,7 +15,7 @@ def check_for_new_dispatches():
     try:
         incidents = fetch_incidents()
     except:
-        print("Error: Logs could not be loaded", flush=True)
+        print("Error: Logs could not be loaded")
         return 1
 
     # Check for error
@@ -26,7 +26,7 @@ def check_for_new_dispatches():
     previous_dates = []
 
     # Reads CSV file and
-    with open('data/Logs.csv') as readFile:
+    with open('data/Dispatches.csv') as readFile:
         csvReader = csv.reader(readFile, skipinitialspace=True)
         for row in csvReader:
             previous_times.append(row[1])
@@ -35,7 +35,7 @@ def check_for_new_dispatches():
     # Removes the quotes from the previous_times values
     previous_times = [i.replace("'", "") for i in previous_times]
 
-    with open('data/Logs.csv', 'a', newline='') as writeFile:
+    with open('data/Dispatches.csv', 'a', newline='') as writeFile:
 
         csvWriter = csv.writer(writeFile)
 
@@ -51,14 +51,15 @@ def check_for_new_dispatches():
                         
                         # Incident is new
                         formatted_incident = DataFormatter.format_incident(incident)
+
                         # Add incident to CSV File
                         writeFile.writelines(str(formatted_incident) + '\n')
 
                         # Print information to console
-                        print(f"\n** {formatted_incident[2]} **", flush=True)
-                        print(formatted_incident[0], flush=True)
-                        print(formatted_incident[1], flush=True)
-                        print(formatted_incident[3] + '\n', flush=True)
+                        print(f"\n** {formatted_incident[2]} **")
+                        print(formatted_incident[0])
+                        print(formatted_incident[1])
+                        print(formatted_incident[3] + '\n')
 
                         # Send text message
                         message = f"** {formatted_incident[2]} **\n\n{formatted_incident[0]}\n{formatted_incident[1]}\n\n{formatted_incident[3]}"
@@ -66,7 +67,7 @@ def check_for_new_dispatches():
                         for cellNumber in Config.numbersToText:
                             sendTextMessage(message, cellNumber)
                             
-                        print("\n", flush=True)
+                        print("\n")
                         break
                     elif DataFormatter.format_incident(incident)[1] == previous_times[i]:
                         prev_date = previous_dates[i][2:-1]
@@ -90,12 +91,12 @@ def check_for_new_arrests():
         csvReader = csv.reader(readFile, skipinitialspace=True)
         for row in csvReader:
             if len(row) > 4:  # Check if the row has at least 5 elements
-                previous_dates.append(row[4])
+                previous_dates.append(row[3])
             else:
                 previous_dates.append('')  # If the row is empty or has fewer elements, add an empty string for date
 
             if len(row) > 5:  # Check if the row has at least 6 elements
-                previous_times.append(row[5])
+                previous_times.append(row[4])
             else:
                 previous_times.append('')  # If the row is empty or has fewer elements, add an empty string for time
 
@@ -104,7 +105,6 @@ def check_for_new_arrests():
 
     with open('data/Arrests.csv', 'a', newline='') as writeFile:
 
-        csvWriter = csv.writer(writeFile)
         monitored_streets = Config.monitored_streets
 
         # Checks each incident for a matching street name
@@ -112,16 +112,17 @@ def check_for_new_arrests():
             if checkMatch(monitored_streets, arrest[1]): # Check if arrest address matches any monitored_streets
                 for i in range(len(previous_times) + 1): # Check if information is already in CSV file
                     if i == len(previous_times):
+
                         # The incident is new. Save info and send text
-                        writeFile.writelines(str(arrest) + '\n')
+                        writeFile.writelines('"' + '", "'.join(map(str, arrest)) + '"\n')
                         
                         # Create message
-                        print('\n', flush=True)
+                        print('\n')
                         s1 = f"** Neighbor Arrest **\n\n{arrest[0]}\n{arrest[1]}\n{arrest[2]}\n\n"
                         s2 = '\n'.join(arrest[5])
                         s3 = f"{arrest[6]}"
                         message = s1 + s2 + s3
-                        print(message + '\n', flush=True)
+                        print(message + '\n')
 
                         # Send text messages
                         for cellNumber in Config.numbersToText:
@@ -141,15 +142,18 @@ def checkMatch(usersStreets, incidentLocation):
 
 def sendTextMessage(message, cellNumber):
     twilioClient.messages.create(body=message, from_=Config.myTwilioNumber, to=cellNumber)
-    print(f"Text sent to {cellNumber}", flush=True)
+    print(f"Text sent to {cellNumber}")
     time.sleep(3)
 
 while True:
     check_for_new_dispatches()
+    print("Finished checking dispatch logs")
     check_for_new_arrests()
-    print("Starting 30 minute timer", flush=True)
+    print("Finished checking arrest logs")
+    print("Starting 30 minute timer\n")
     time.sleep(1800)
 
     check_for_new_dispatches()
-    print("Starting 30 minute timer", flush=True)
+    print("Finished checking dispatch logs")
+    print("Starting 30 minute timer\n")
     time.sleep(1800)

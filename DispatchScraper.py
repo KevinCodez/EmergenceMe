@@ -2,12 +2,15 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
+import time
 
 def fetch_incidents():
-    # Launch and configure Browser
-    options = Options()
-    options.headless = True
+
+    # Configure Firefox options for headless mode
+    options = webdriver.FirefoxOptions()
+    options.add_argument("--headless")
+
+    # Launch Firefox in headless mode
     browser = webdriver.Firefox(options=options)
 
     try:
@@ -16,6 +19,9 @@ def fetch_incidents():
 
         # Go to the dispatch log site
         browser.get("https://maps.fayetteville-ar.gov/DispatchLogs/")
+
+        # Give the site some time to load
+        time.sleep(6)
 
         # Wait for site to load then store all "tr" elements in a "dispatches" list
         dispatches = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, 'tr')))
